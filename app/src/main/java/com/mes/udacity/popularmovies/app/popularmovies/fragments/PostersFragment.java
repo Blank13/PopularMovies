@@ -1,11 +1,17 @@
 package com.mes.udacity.popularmovies.app.popularmovies.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,6 +27,8 @@ import com.google.gson.Gson;
 import com.mes.udacity.popularmovies.app.popularmovies.R;
 import com.mes.udacity.popularmovies.app.popularmovies.activities.DetailActivity;
 import com.mes.udacity.popularmovies.app.popularmovies.adapters.PosterGridAdapter;
+import com.mes.udacity.popularmovies.app.popularmovies.database.MovieContract;
+import com.mes.udacity.popularmovies.app.popularmovies.database.MovieDBHelper;
 import com.mes.udacity.popularmovies.app.popularmovies.listeners.PostersListListener;
 import com.mes.udacity.popularmovies.app.popularmovies.responses.ApiResponse;
 import com.mes.udacity.popularmovies.app.popularmovies.models.Movie;
@@ -35,22 +43,61 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mes.udacity.popularmovies.app.popularmovies.utils.StaticMethods.haveNetworkConnection;
+
 /**
  * Created by Mohamed Elsayed on 10/19/2016.
  */
 
 public class PostersFragment extends Fragment implements PostersListListener{
 
+    private static final String TAG = PostersFragment.class.getSimpleName();
+
     private GridView gridView;
     private ProgressBar progressBar;
     private PosterGridAdapter posterGridAdapter;
     private int pages = 1;
-    private String sortType = null;
+    private String sortType = "popular";
+    private boolean firstTime = true;
+
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(String movieStr);
+    }
 
     @Override
     public void onStart() {
         super.onStart();
-        updateMovies(sortType);
+        if(haveNetworkConnection(getActivity())){
+            if(sortType != "show"){
+                updateMovies(sortType);
+            }
+            else{
+                if(posterGridAdapter != null &&
+                        posterGridAdapter.getCount() != getDatabaseCount()){
+                    getStoredMovies();
+                }
+            }
+        }
+        else {
+            if(firstTime){
+                firstTime = false;
+                Toast.makeText(getActivity(),"No Internet Connection Opening the Favourites",
+                        Toast.LENGTH_SHORT).show();
+            }
+            sortType = "show";
+            getStoredMovies();
+        }
+    }
+
+    private int getDatabaseCount() {
+        MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+        SQLiteDatabase db = movieDBHelper.getReadableDatabase();
+        Cursor cursor = db.query(MovieContract.MovieEntery.MOVIES_TABLE,
+                null, null, null, null, null, null);
+        return cursor.getCount();
     }
 
     @Override
@@ -59,27 +106,36 @@ public class PostersFragment extends Fragment implements PostersListListener{
         setHasOptionsMenu(true);
     }
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setRetainInstance(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.posters_fragment,container,false);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-        progressBar.setVisibility(View.VISIBLE);
         gridView = (GridView) view.findViewById(R.id.posters_gridview);
-        posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
+        if(posterGridAdapter == null){
+            posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
+        }
         gridView.setAdapter(posterGridAdapter);
+        initPosterAction();
+        return view;
+    }
+
+    private void initPosterAction() {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movie = (Movie) posterGridAdapter.getItem(position);
                 Gson gson = new Gson();
                 String movieStr = gson.toJson(movie);
-                Intent intent = new Intent(getActivity(),DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT,movieStr);
-                startActivity(intent);
+                ((Callback)getActivity()).onItemSelected(movieStr);
             }
         });
-        return view;
     }
 
     @Override
@@ -102,6 +158,11 @@ public class PostersFragment extends Fragment implements PostersListListener{
                 pages = 1;
                 updateMovies(sortType);
                 return true;
+            case R.id.action_show_favourite:
+                sortType = "show";
+                posterGridAdapter.clear();
+                getStoredMovies();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -110,8 +171,16 @@ public class PostersFragment extends Fragment implements PostersListListener{
     @Override
     public void onPosterListReady(List<Movie> movieList) {
         progressBar.setVisibility(View.GONE);
-        posterGridAdapter.updatePosters(movieList);
-        if (pages < 15) {
+        if(movieList == null){
+            Toast.makeText(getActivity(),"No Internet connection", Toast.LENGTH_SHORT).show();
+            sortType = "show";
+            getStoredMovies();
+        }
+        else if(sortType.equals("show")){
+            posterGridAdapter.updatePosters(movieList);
+        }
+        else if (pages <= 15 && !sortType.equals("show")) {
+            posterGridAdapter.updatePosters(movieList);
             updateMovies(sortType);
         }
     }
@@ -127,7 +196,10 @@ public class PostersFragment extends Fragment implements PostersListListener{
         if(sort == null){
             sort = "popular";
         }
-        fetchMoviesData.execute(sort);
+        if(pages < 15){
+            progressBar.setVisibility(View.VISIBLE);
+            fetchMoviesData.execute(sort);
+        }
     }
 
     private class FetchMoviesData extends AsyncTask<String, Void, List<Movie>>{
@@ -135,7 +207,7 @@ public class PostersFragment extends Fragment implements PostersListListener{
         @Override
         protected List<Movie> doInBackground(String... params) {
             HttpURLConnection urlConnection = null;
-            ApiResponse apiResponse = null;
+            ApiResponse apiResponse;
 
             final String PAGE_NUM = "page";
             final String APPID_PARAM = "api_key";
@@ -152,6 +224,7 @@ public class PostersFragment extends Fragment implements PostersListListener{
                 urlConnection.connect();
                 Gson gson = new Gson();
                 apiResponse = gson.fromJson(getBodyString(urlConnection.getInputStream()),ApiResponse.class);
+                return apiResponse.getMovies();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -160,15 +233,13 @@ public class PostersFragment extends Fragment implements PostersListListener{
                     urlConnection.disconnect();
                 }
             }
-            return apiResponse.getMovies();
+            return null;
         }
 
         @Override
         protected void onPostExecute(List<Movie> movies) {
-            if(movies != null){
-                onPosterListReady(movies);
-                pages++;
-            }
+            onPosterListReady(movies);
+            pages++;
         }
 
         private String getBodyString(InputStream inputStream) throws IOException {
@@ -180,6 +251,49 @@ public class PostersFragment extends Fragment implements PostersListListener{
             }
             in.close();
             return response.toString();
+        }
+    }
+
+    private void getStoredMovies(){
+        FetchStoredMoviesData fetchStoredMoviesData = new FetchStoredMoviesData();
+        fetchStoredMoviesData.execute();
+    }
+
+    private class FetchStoredMoviesData extends AsyncTask<Void, Void, List<Movie>>{
+
+        @Override
+        protected List<Movie> doInBackground(Void... params) {
+            List<Movie> movies = new ArrayList<>();
+            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
+            Cursor cursor = db.query(MovieContract.MovieEntery.MOVIES_TABLE,
+                    null, null, null, null, null, null);
+            while (cursor.moveToNext()){
+                Movie movie = new Movie();
+                movie.setId(Long.parseLong(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery._ID))));
+                movie.setTitle(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_TITLE)));
+                movie.setPosterPath(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_POSTER_PATH)));
+                movie.setReleaseDate(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_RELEASE_DATE)));
+                movie.setVoteAverage(Double.parseDouble(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_VOTE_AVERAGE))));
+                movie.setOverView(cursor.getString(
+                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_OVER_VIEW)));
+                movies.add(movie);
+            }
+            db.close();
+            return movies;
+        }
+
+        @Override
+        protected void onPostExecute(List<Movie> movies) {
+            if(movies != null){
+                posterGridAdapter.clear();
+                onPosterListReady(movies);
+            }
         }
     }
 }

@@ -1,27 +1,32 @@
 package com.mes.udacity.popularmovies.app.popularmovies.activities;
 
 import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
 
-import com.mes.udacity.popularmovies.app.popularmovies.fragments.PostersFragment;
 import com.mes.udacity.popularmovies.app.popularmovies.R;
+import com.mes.udacity.popularmovies.app.popularmovies.fragments.DetailFragment;
+import com.mes.udacity.popularmovies.app.popularmovies.fragments.PostersFragment;
+import com.mes.udacity.popularmovies.app.popularmovies.utils.Constants;
 
-public class MainActivity extends AppCompatActivity {
+import static com.mes.udacity.popularmovies.app.popularmovies.utils.StaticMethods.attachPostersFragment;
+
+public class MainActivity extends AppCompatActivity implements PostersFragment.Callback{
 
     private FragmentManager fragmentManager;
+
+    private boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         fragmentManager = getSupportFragmentManager();
-        if (savedInstanceState == null) {
-            attachPostersFragment();
+        attachPostersFragment(fragmentManager,R.id.main_container);
+        if(findViewById(R.id.activity_detail_container) != null){
+            mTwoPane = true;
         }
     }
 
@@ -32,21 +37,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if(id == R.id.action_show_favourite){
-
+    public void onItemSelected(String movieStr) {
+        if(mTwoPane){
+            Bundle args = new Bundle();
+            args.putString(DetailFragment.MOVIE_CALL, movieStr);
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(args);
+            fragmentManager.beginTransaction()
+                    .replace(R.id.activity_detail_container,fragment,Constants.DETAIL_FRAGMENT)
+                    .commit();
         }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void attachPostersFragment(){
-        Fragment fragment = fragmentManager.findFragmentByTag("POSTERS_FRAGMENT");
-        if (fragment == null) {
-            fragment = new PostersFragment();
+        else {
+            Intent intent = new Intent(this,DetailActivity.class)
+                    .putExtra(Intent.EXTRA_TEXT, movieStr);
+            startActivity(intent);
         }
-        fragmentManager.beginTransaction()
-                .replace(R.id.main_container, fragment, "POSTERS_FRAGMENT")
-                .commit();
     }
 }

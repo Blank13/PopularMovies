@@ -1,13 +1,13 @@
 package com.mes.udacity.popularmovies.app.popularmovies.activities;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import com.mes.udacity.popularmovies.app.popularmovies.R;
-import com.mes.udacity.popularmovies.app.popularmovies.fragments.DetailFragment;
-import com.mes.udacity.popularmovies.app.popularmovies.fragments.PostersFragment;
+
+import static com.mes.udacity.popularmovies.app.popularmovies.utils.StaticMethods.attachDetailFragment;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -19,18 +19,15 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         fragmentManager = getSupportFragmentManager();
-        if (savedInstanceState == null) {
-            attachDetailFragment();
-        }
+        attachDetailFragment(fragmentManager,R.id.activity_detail_container);
     }
 
-    private void attachDetailFragment() {
-        Fragment fragment = fragmentManager.findFragmentByTag("DETAIL_FRAGMENT");
-        if (fragment == null) {
-            fragment = new DetailFragment();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
         }
-        fragmentManager.beginTransaction()
-                .replace(R.id.activity_detail_container, fragment, "DETAIL_FRAGMENT")
-                .commit();
+        return super.onOptionsItemSelected(item);
     }
 }
