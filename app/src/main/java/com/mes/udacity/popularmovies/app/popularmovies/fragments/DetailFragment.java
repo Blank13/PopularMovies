@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.mes.udacity.popularmovies.app.popularmovies.R;
+import com.mes.udacity.popularmovies.app.popularmovies.activities.MainActivity;
 import com.mes.udacity.popularmovies.app.popularmovies.adapters.ReviewsListAdapter;
 import com.mes.udacity.popularmovies.app.popularmovies.adapters.TrailersListAdapter;
 import com.mes.udacity.popularmovies.app.popularmovies.database.MovieContract;
@@ -39,6 +40,7 @@ import com.mes.udacity.popularmovies.app.popularmovies.models.Trailer;
 import com.mes.udacity.popularmovies.app.popularmovies.responses.ReviewsResponse;
 import com.mes.udacity.popularmovies.app.popularmovies.responses.TrailerResponse;
 import com.mes.udacity.popularmovies.app.popularmovies.utils.Constants;
+import com.mes.udacity.popularmovies.app.popularmovies.utils.SizedListView;
 import com.squareup.picasso.Picasso;
 
 import java.io.BufferedReader;
@@ -71,14 +73,17 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
     private ImageView image;
 
-    private ListView trailers;
-    private ListView reviews;
+    private SizedListView trailers;
+    private SizedListView reviews;
 
     private TrailersListAdapter trailersListAdapter;
     private ReviewsListAdapter reviewsListAdapter;
 
     private boolean firstTime = true;
 
+    public interface DetailCallBack{
+        void onFavouriteClick();
+    }
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -117,8 +122,8 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
         rate.setText(Double.toString(movie.getVoteAverage())+"/10");
         overView.setText(movie.getOverView());
 
-        trailers = (ListView) view.findViewById(R.id.movie_trials);
-        reviews = (ListView) view.findViewById(R.id.movie_reviews);
+        trailers = (SizedListView) view.findViewById(R.id.movie_trials);
+        reviews = (SizedListView) view.findViewById(R.id.movie_reviews);
 
         Picasso.with(getContext())
                 .load(Constants.MOVIE_API_IMAGE_BASE_URL+ movie.getPosterPath())
@@ -179,6 +184,9 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
                 else{
                     v.setSelected(false);
                     removeFromFavourite();
+                    if(getActivity() instanceof MainActivity){
+                        ((DetailCallBack)getActivity()).onFavouriteClick();
+                    }
                 }
             }
         });
@@ -199,15 +207,9 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Trailer trailer = (Trailer) trailersListAdapter.getItem(position);
-                Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:"
-                        + trailer.getKey()));
                 Intent webIntent = new Intent(Intent.ACTION_VIEW,
                         Uri.parse("http://www.youtube.com/watch?v=" + trailer.getKey()));
-                try {
-                    startActivity(appIntent);
-                } catch (ActivityNotFoundException ex) {
                     startActivity(webIntent);
-                }
             }
         });
     }
@@ -215,7 +217,7 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
     @Override
     public void onReviewListReady(List<Review> reviewList) {
         reviewsListAdapter.updateReviews(reviewList);
-        setListViewHeightBasedOnChildren(reviews,reviewsListAdapter);
+        reviews.setExpanded(true);
     }
 
     @Override
@@ -226,44 +228,12 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
     @Override
     public void onTrailerListReady(List<Trailer> trailerList) {
         trailersListAdapter.updatetrailers(trailerList);
-        setListViewHeightBasedOnChildren(trailers,trailersListAdapter);
+        trailers.setExpanded(true);
     }
 
     @Override
     public void onTrailerError(String message) {
 
-    }
-
-    /**
-     * Take the list and make it with a fixed height due to scroll conflict between ScrollView
-     * and ListView
-     * @param listView
-     * @param listAdapter
-     */
-    public void setListViewHeightBasedOnChildren(ListView listView, BaseAdapter listAdapter) {
-        if (listAdapter == null) {
-            // pre-condition
-            return;
-        }
-
-        int totalHeight = listView.getPaddingTop() + listView.getPaddingBottom();
-        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
-        for (int i = 0; i < listAdapter.getCount(); i++) {
-            View listItem = listAdapter.getView(i, null, listView);
-
-            if(listItem != null){
-                // This next line is needed before you call measure or else you won't get measured height at all. The listitem needs to be drawn first to know the height.
-                listItem.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-                listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
-                totalHeight += listItem.getMeasuredHeight();
-
-            }
-        }
-
-        ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
-        listView.setLayoutParams(params);
-        listView.requestLayout();
     }
 
     private class FetchTrailers extends AsyncTask<String, Void, List<Trailer>>{

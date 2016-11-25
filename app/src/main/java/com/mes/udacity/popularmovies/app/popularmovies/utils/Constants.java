@@ -7,7 +7,7 @@ package com.mes.udacity.popularmovies.app.popularmovies.utils;
 public class Constants {
     //Constants for the movie Api
     public final static String MOVIE_API_BASE_URL = "https://api.themoviedb.org/3/movie/";
-    public final static String MOVIE_API_KEY = "";
+    public final static String MOVIE_API_KEY = "db1bb565176cfd80ed868cc61906bc96";
     public final static String MOVIE_API_IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w185/";
 
     //Constants for fragments tags

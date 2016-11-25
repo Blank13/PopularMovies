@@ -1,6 +1,7 @@
 package com.mes.udacity.popularmovies.app.popularmovies.activities;
 
 import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,7 +14,8 @@ import com.mes.udacity.popularmovies.app.popularmovies.utils.Constants;
 
 import static com.mes.udacity.popularmovies.app.popularmovies.utils.StaticMethods.attachPostersFragment;
 
-public class MainActivity extends AppCompatActivity implements PostersFragment.Callback{
+public class MainActivity extends AppCompatActivity implements PostersFragment.Callback
+        ,DetailFragment.DetailCallBack{
 
     private FragmentManager fragmentManager;
 
@@ -51,6 +53,24 @@ public class MainActivity extends AppCompatActivity implements PostersFragment.C
             Intent intent = new Intent(this,DetailActivity.class)
                     .putExtra(Intent.EXTRA_TEXT, movieStr);
             startActivity(intent);
+        }
+    }
+
+    @Override
+    public void onChangeSort() {
+        if(mTwoPane){
+            Fragment fragment = fragmentManager.findFragmentByTag(Constants.DETAIL_FRAGMENT);
+            if(fragment != null){
+                fragmentManager.beginTransaction().detach(fragment).commit();
+            }
+        }
+    }
+
+    @Override
+    public void onFavouriteClick() {
+        if(mTwoPane){
+            Fragment fragment = fragmentManager.findFragmentByTag(Constants.POSTER_FRAGMENT);
+            ((PostersFragment)fragment).onFavoutiteChange();
         }
     }
 }

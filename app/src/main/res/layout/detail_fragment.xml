@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:background="@color/colorTealMid"
             android:text="Movie Name"
-            android:textSize="40sp"/>
+            android:textSize="@dimen/big_size"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -42,7 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="date"
-                    android:textSize="21sp"/>
+                    android:textSize="@dimen/normal_size"/>
 
                 <TextView
                     android:id="@+id/movie_rate"
@@ -51,7 +51,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="rating"
-                    android:textSize="21sp"/>
+                    android:textSize="@dimen/normal_size"/>
 
                 <Button
                     android:id="@+id/movie_fav_button"
@@ -67,34 +67,39 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="OverView"
-            android:paddingLeft="@dimen/activity_horizontal_margin"/>
+            android:textSize="@dimen/small_size"
+            android:paddingLeft="@dimen/activity_vertical_margin"/>
 
         <TextView
             android:text="Trailers :"
-            android:textSize="20sp"
+            android:textSize="@dimen/small_size"
             android:paddingLeft="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-        <ListView
+
+        <com.mes.udacity.popularmovies.app.popularmovies.utils.SizedListView
             android:id="@+id/movie_trials"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:focusable="false"
             android:scrollbars="none">
 
-        </ListView>
+        </com.mes.udacity.popularmovies.app.popularmovies.utils.SizedListView>
         <TextView
             android:text="Reviews :"
-            android:textSize="20sp"
+            android:textSize="@dimen/small_size"
             android:paddingLeft="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-        <ListView
+
+        <com.mes.udacity.popularmovies.app.popularmovies.utils.SizedListView
             android:id="@+id/movie_reviews"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:focusable="false"
             android:scrollbars="none">
 
-        </ListView>
+        </com.mes.udacity.popularmovies.app.popularmovies.utils.SizedListView>
 
     </LinearLayout>
 </ScrollView>

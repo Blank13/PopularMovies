@@ -10,10 +10,14 @@
     <TextView
         android:id="@+id/review_author"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/normal_size"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/review_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/small_size"/>
 </LinearLayout>
