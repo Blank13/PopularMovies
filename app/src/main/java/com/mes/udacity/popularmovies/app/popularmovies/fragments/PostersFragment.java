@@ -1,17 +1,14 @@
 package com.mes.udacity.popularmovies.app.popularmovies.fragments;
 
-import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,9 +22,7 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.mes.udacity.popularmovies.app.popularmovies.R;
-import com.mes.udacity.popularmovies.app.popularmovies.activities.DetailActivity;
-import com.mes.udacity.popularmovies.app.popularmovies.activities.MainActivity;
-import com.mes.udacity.popularmovies.app.popularmovies.adapters.PosterGridAdapter;
+import com.mes.udacity.popularmovies.app.popularmovies.adapters.PosterGridRecyclerAdapter;
 import com.mes.udacity.popularmovies.app.popularmovies.database.MovieContract;
 import com.mes.udacity.popularmovies.app.popularmovies.database.MovieDBHelper;
 import com.mes.udacity.popularmovies.app.popularmovies.listeners.PostersListListener;
@@ -50,13 +45,13 @@ import static com.mes.udacity.popularmovies.app.popularmovies.utils.StaticMethod
  * Created by Mohamed Elsayed on 10/19/2016.
  */
 
-public class PostersFragment extends Fragment implements PostersListListener {
+public class PostersFragment extends Fragment implements PostersListListener, PosterGridRecyclerAdapter.ListItemClickListener {
 
     private static final String TAG = PostersFragment.class.getSimpleName();
 
-    private GridView gridView;
+    private RecyclerView recyclerView;
     private ProgressBar progressBar;
-    private PosterGridAdapter posterGridAdapter;
+    private PosterGridRecyclerAdapter posterGridRecyclerAdapter;
     private int pages = 1;
     private String sortType = "popular";
     private boolean firstTime = true;
@@ -66,9 +61,7 @@ public class PostersFragment extends Fragment implements PostersListListener {
          * DetailFragmentCallback for when an item has been selected.
          */
         void onItemSelected(String movieStr);
-
         void onChangeSort();
-
     }
 
     @Override
@@ -79,8 +72,8 @@ public class PostersFragment extends Fragment implements PostersListListener {
                 updateMovies(sortType);
             }
             else{
-                if(posterGridAdapter != null &&
-                        posterGridAdapter.getCount() != getDatabaseCount()){
+                if(posterGridRecyclerAdapter != null &&
+                        posterGridRecyclerAdapter.getItemCount() != getDatabaseCount()){
                     getStoredMovies();
                 }
             }
@@ -123,29 +116,39 @@ public class PostersFragment extends Fragment implements PostersListListener {
         View view = inflater.inflate(R.layout.posters_fragment,container,false);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
-        gridView = (GridView) view.findViewById(R.id.posters_gridview);
-        if(posterGridAdapter == null){
-            posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
+        recyclerView = (RecyclerView) view.findViewById(R.id.posters_gridview);
+        if(posterGridRecyclerAdapter == null){
+            posterGridRecyclerAdapter = new PosterGridRecyclerAdapter(new ArrayList<Movie>(),this);
         }
-        if (posterGridAdapter.isEmpty()) {
+        if (posterGridRecyclerAdapter.getItemCount() == 0) {
             progressBar.setVisibility(View.VISIBLE);
         }
-        gridView.setAdapter(posterGridAdapter);
-        initPosterAction();
+        int numberOfRows = getResources().getInteger(R.integer.col_num);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfRows);
+        recyclerView.setLayoutManager(gridLayoutManager);
+        recyclerView.setAdapter(posterGridRecyclerAdapter);
+//        initPosterAction();
         return view;
     }
 
-    private void initPosterAction() {
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie movie = (Movie) posterGridAdapter.getItem(position);
-                Gson gson = new Gson();
-                String movieStr = gson.toJson(movie);
-                ((Callback)getActivity()).onItemSelected(movieStr);
-            }
-        });
+    @Override
+    public void onListItemClick(int clickedItemIndex) {
+        Movie movie = posterGridRecyclerAdapter.getItem(clickedItemIndex);
+        Gson gson = new Gson();
+        String movieStr = gson.toJson(movie);
+        ((Callback)getActivity()).onItemSelected(movieStr);
     }
+//    private void initPosterAction() {
+//        recyclerView.setOnClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                Movie movie = (Movie) posterGridRecyclerAdapter.getItem(position);
+//                Gson gson = new Gson();
+//                String movieStr = gson.toJson(movie);
+//                ((Callback)getActivity()).onItemSelected(movieStr);
+//            }
+//        });
+//    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -158,8 +161,8 @@ public class PostersFragment extends Fragment implements PostersListListener {
             case R.id.action_popular_sort:
                 sortType = "popular";
                 progressBar.setVisibility(View.VISIBLE);
-                posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
-                gridView.setAdapter(posterGridAdapter);
+                posterGridRecyclerAdapter = new PosterGridRecyclerAdapter(new ArrayList<Movie>(), this);
+                recyclerView.setAdapter(posterGridRecyclerAdapter);
                 pages = 1;
                 ((Callback)getActivity()).onChangeSort();
                 updateMovies(sortType);
@@ -167,8 +170,8 @@ public class PostersFragment extends Fragment implements PostersListListener {
             case R.id.action_rating_sort:
                 sortType = "top_rated";
                 progressBar.setVisibility(View.VISIBLE);
-                posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
-                gridView.setAdapter(posterGridAdapter);
+                posterGridRecyclerAdapter = new PosterGridRecyclerAdapter(new ArrayList<Movie>(), this);
+                recyclerView.setAdapter(posterGridRecyclerAdapter);
                 pages = 1;
                 ((Callback)getActivity()).onChangeSort();
                 updateMovies(sortType);
@@ -176,8 +179,8 @@ public class PostersFragment extends Fragment implements PostersListListener {
             case R.id.action_show_favourite:
                 sortType = "show";
                 progressBar.setVisibility(View.VISIBLE);
-                posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
-                gridView.setAdapter(posterGridAdapter);
+                posterGridRecyclerAdapter = new PosterGridRecyclerAdapter(new ArrayList<Movie>(), this);
+                recyclerView.setAdapter(posterGridRecyclerAdapter);
                 ((Callback)getActivity()).onChangeSort();
                 getStoredMovies();
                 return true;
@@ -196,10 +199,10 @@ public class PostersFragment extends Fragment implements PostersListListener {
             getStoredMovies();
         }
         else if(sortType.equals("show")){
-            posterGridAdapter.updatePosters(movieList);
+            posterGridRecyclerAdapter.updatePosters(movieList);
         }
         else if (pages <= 15 && !sortType.equals("show")) {
-            posterGridAdapter.updatePosters(movieList);
+            posterGridRecyclerAdapter.updatePosters(movieList);
             updateMovies(sortType);
         }
     }
@@ -277,7 +280,7 @@ public class PostersFragment extends Fragment implements PostersListListener {
         }
     }
 
-    public void onFavoutiteChange(){
+    public void onFavouriteChange(){
         if(sortType.equalsIgnoreCase("show")){
             getStoredMovies();
             ((Callback)getActivity()).onChangeSort();
@@ -320,9 +323,7 @@ public class PostersFragment extends Fragment implements PostersListListener {
 
         @Override
         protected void onPostExecute(List<Movie> movies) {
-            /*posterGridAdapter = new PosterGridAdapter(getContext(),new ArrayList<Movie>());
-            gridView.setAdapter(posterGridAdapter);*/
-            posterGridAdapter.clear();
+            posterGridRecyclerAdapter.clear();
             if(movies != null){
                 if(movies.size() == 0){
                     Toast.makeText(getActivity(),"There is no Favourites",Toast.LENGTH_LONG).show();

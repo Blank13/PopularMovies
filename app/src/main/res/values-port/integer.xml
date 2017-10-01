@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="col_num" type="integer">2</item>
+    <integer name="col_num">2</integer>
 </resources>

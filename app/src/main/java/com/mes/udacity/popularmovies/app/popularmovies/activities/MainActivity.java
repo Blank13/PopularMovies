@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements PostersFragment.C
     public void onFavouriteClick() {
         if(mTwoPane){
             Fragment fragment = fragmentManager.findFragmentByTag(Constants.POSTER_FRAGMENT);
-            ((PostersFragment)fragment).onFavoutiteChange();
+            ((PostersFragment)fragment).onFavouriteChange();
         }
     }
 }
