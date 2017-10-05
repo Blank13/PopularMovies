@@ -1,6 +1,5 @@
 package com.mes.udacity.popularmovies.app.popularmovies.fragments;
 
-import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,20 +9,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.mes.udacity.popularmovies.app.popularmovies.R;
@@ -63,19 +56,15 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
     private Movie movie;
 
     private ScrollView scrollView;
-
     private TextView title;
     private TextView date;
     private TextView rate;
     private TextView overView;
-
     private Button favButton;
-
     private ImageView image;
 
     private SizedListView trailers;
     private SizedListView reviews;
-
     private TrailersListAdapter trailersListAdapter;
     private ReviewsListAdapter reviewsListAdapter;
 
@@ -84,6 +73,7 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
     public interface DetailCallBack{
         void onFavouriteClick();
     }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -91,6 +81,7 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
         View view = inflater.inflate(R.layout.detail_fragment,container,false);
         Intent intent = getActivity().getIntent();
         String movieJson;
+//        contentResolver = getContext().get
         Gson gson = new Gson();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
             movieJson = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -159,9 +150,9 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
         }
         MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
         SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-        final String search = "SELECT "+ MovieContract.MovieEntery._ID + " FROM "+
-                MovieContract.MovieEntery.MOVIES_TABLE + " WHERE " +
-                MovieContract.MovieEntery._ID  + " = " + movie.getId() + "";
+        final String search = "SELECT "+ MovieContract.MovieEntry._ID + " FROM "+
+                MovieContract.MovieEntry.MOVIES_TABLE + " WHERE " +
+                MovieContract.MovieEntry._ID  + " = " + movie.getId() + "";
         Cursor cursor = db.rawQuery(search, null);
         if(cursor.getCount() <= 0){
             cursor.close();
@@ -240,27 +231,30 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected List<Trailer> doInBackground(String... params) {
-            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-            final String search = "SELECT * FROM "+
-                    MovieContract.TrailerEntery.TRAILERS_TABLE + " WHERE " +
-                    MovieContract.TrailerEntery.MOVIE_ID  + " = " + movie.getId();
-            Cursor cursor = db.rawQuery(search, null);
+//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+//            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
+//            final String search = "SELECT * FROM "+
+//                    MovieContract.TrailerEntry.TRAILERS_TABLE + " WHERE " +
+//                    MovieContract.TrailerEntry.MOVIE_ID  + " = " + movie.getId();
+            Cursor cursor = getContext().getContentResolver()
+                    .query(MovieContract.TrailerEntry.TRAILER_CONTENT_URI,
+                            null,
+                            MovieContract.TrailerEntry.MOVIE_ID + " = " + movie.getId(),
+                            null,
+                            null);
             if(cursor.getCount() > 0){
                 List<Trailer> trailers = new ArrayList<>();
                 while (cursor.moveToNext()){
                     Trailer trailer = new Trailer();
                     trailer.setKey(cursor.getString(
-                            cursor.getColumnIndex(MovieContract.TrailerEntery.TRAILER_KEY)));
+                            cursor.getColumnIndex(MovieContract.TrailerEntry.TRAILER_KEY)));
                     trailer.setName(cursor.getString(
-                            cursor.getColumnIndex(MovieContract.TrailerEntery.TRAILER_NAME)));
+                            cursor.getColumnIndex(MovieContract.TrailerEntry.TRAILER_NAME)));
                     trailers.add(trailer);
                 }
-                db.close();
                 cursor.close();
                 return trailers;
             }
-            db.close();
             cursor.close();
             HttpURLConnection urlConnection = null;
             TrailerResponse trailerResponse = null;
@@ -303,27 +297,30 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected List<Review> doInBackground(String... params) {
-            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-            final String search = "SELECT * FROM "+
-                    MovieContract.ReviewEntery.REVIEWS_TABLE + " WHERE " +
-                    MovieContract.ReviewEntery.MOVIE_ID  + " = " + movie.getId();
-            Cursor cursor = db.rawQuery(search, null);
+//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+//            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
+//            final String search = "SELECT * FROM "+
+//                    MovieContract.ReviewEntry.REVIEWS_TABLE + " WHERE " +
+//                    MovieContract.ReviewEntry.MOVIE_ID  + " = " + movie.getId();
+            Cursor cursor = getContext().getContentResolver()
+                    .query(MovieContract.ReviewEntry.REVIEW_CONTENT_URI,
+                            null,
+                            MovieContract.ReviewEntry.MOVIE_ID + " = " + movie.getId(),
+                            null,
+                            null);
             if(cursor.getCount() > 0){
                 List<Review> trailers = new ArrayList<>();
                 while (cursor.moveToNext()){
                     Review review = new Review();
                     review.setAuthor(cursor.getString(
-                            cursor.getColumnIndex(MovieContract.ReviewEntery.REVIEWS_AUTHOR)));
+                            cursor.getColumnIndex(MovieContract.ReviewEntry.REVIEWS_AUTHOR)));
                     review.setContent(cursor.getString(
-                            cursor.getColumnIndex(MovieContract.ReviewEntery.REVIEWS_CONTENT)));
+                            cursor.getColumnIndex(MovieContract.ReviewEntry.REVIEWS_CONTENT)));
                     trailers.add(review);
                 }
-                db.close();
                 cursor.close();
                 return trailers;
             }
-            db.close();
             cursor.close();
             HttpURLConnection urlConnection = null;
             ReviewsResponse reviewsRsponse = null;
@@ -389,35 +386,38 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected Void doInBackground(Void... params) {
-            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
+//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+//            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
-            values.put(MovieContract.MovieEntery._ID, movie.getId());
-            values.put(MovieContract.MovieEntery.MOVIE_TITLE, movie.getTitle());
-            values.put(MovieContract.MovieEntery.MOVIE_POSTER_PATH, movie.getPosterPath());
-            values.put(MovieContract.MovieEntery.MOVIE_RELEASE_DATE, movie.getReleaseDate());
-            values.put(MovieContract.MovieEntery.MOVIE_VOTE_AVERAGE, movie.getVoteAverage());
-            values.put(MovieContract.MovieEntery.MOVIE_OVER_VIEW, movie.getOverView());
-            db.insert(MovieContract.MovieEntery.MOVIES_TABLE, null, values);
-
+            values.put(MovieContract.MovieEntry._ID, movie.getId());
+            values.put(MovieContract.MovieEntry.MOVIE_TITLE, movie.getTitle());
+            values.put(MovieContract.MovieEntry.MOVIE_POSTER_PATH, movie.getPosterPath());
+            values.put(MovieContract.MovieEntry.MOVIE_RELEASE_DATE, movie.getReleaseDate());
+            values.put(MovieContract.MovieEntry.MOVIE_VOTE_AVERAGE, movie.getVoteAverage());
+            values.put(MovieContract.MovieEntry.MOVIE_OVER_VIEW, movie.getOverView());
+//            db.insert(MovieContract.MovieEntry.MOVIES_TABLE, null, values);
+            getContext().getContentResolver()
+                    .insert(MovieContract.MovieEntry.MOVIE_CONTENT_URI, values);
             for(int i = 0; i < trailersListAdapter.getCount(); i++){
                 Trailer trailer = (Trailer) trailersListAdapter.getItem(i);
                 values.clear();
-                values.put(MovieContract.TrailerEntery.MOVIE_ID, movie.getId());
-                values.put(MovieContract.TrailerEntery.TRAILER_KEY, trailer.getKey());
-                values.put(MovieContract.TrailerEntery.TRAILER_NAME, trailer.getName());
-                db.insert(MovieContract.TrailerEntery.TRAILERS_TABLE, null, values);
+                values.put(MovieContract.TrailerEntry.MOVIE_ID, movie.getId());
+                values.put(MovieContract.TrailerEntry.TRAILER_KEY, trailer.getKey());
+                values.put(MovieContract.TrailerEntry.TRAILER_NAME, trailer.getName());
+                getContext().getContentResolver()
+                        .insert(MovieContract.TrailerEntry.TRAILER_CONTENT_URI,values);
             }
 
             for(int i = 0; i < reviewsListAdapter.getCount(); i++){
                 Review review = (Review) reviewsListAdapter.getItem(i);
                 values.clear();
-                values.put(MovieContract.ReviewEntery.MOVIE_ID, movie.getId());
-                values.put(MovieContract.ReviewEntery.REVIEWS_AUTHOR, review.getAuthor());
-                values.put(MovieContract.ReviewEntery.REVIEWS_CONTENT, review.getContent());
-                db.insert(MovieContract.ReviewEntery.REVIEWS_TABLE, null, values);
+                values.put(MovieContract.ReviewEntry.MOVIE_ID, movie.getId());
+                values.put(MovieContract.ReviewEntry.REVIEWS_AUTHOR, review.getAuthor());
+                values.put(MovieContract.ReviewEntry.REVIEWS_CONTENT, review.getContent());
+                getContext().getContentResolver()
+                        .insert(MovieContract.ReviewEntry.REVIEW_CONTENT_URI, values);
             }
-            db.close();
+//            db.close();
             return null;
         }
     }
@@ -426,15 +426,27 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected Void doInBackground(Void... params) {
-            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
-            db.delete(MovieContract.MovieEntery.MOVIES_TABLE,
-                    MovieContract.MovieEntery._ID + "=" + movie.getId(), null);
-            while (db.delete(MovieContract.TrailerEntery.TRAILERS_TABLE,
-                    MovieContract.TrailerEntery.MOVIE_ID + "=" + movie.getId(), null) > 0);
-            while (db.delete(MovieContract.ReviewEntery.REVIEWS_TABLE,
-                    MovieContract.ReviewEntery.MOVIE_ID + "=" + movie.getId(), null) > 0);
-            db.close();
+//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+//            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
+//            db.delete(MovieContract.MovieEntry.MOVIES_TABLE,
+//                    MovieContract.MovieEntry._ID + "=" + movie.getId(), null);
+//            while (db.delete(MovieContract.TrailerEntry.TRAILERS_TABLE,
+//                    MovieContract.TrailerEntry.MOVIE_ID + "=" + movie.getId(), null) > 0);
+//            while (db.delete(MovieContract.ReviewEntry.REVIEWS_TABLE,
+//                    MovieContract.ReviewEntry.MOVIE_ID + "=" + movie.getId(), null) > 0);
+//            db.close();
+            getContext().getContentResolver()
+                    .delete(MovieContract.MovieEntry.MOVIE_CONTENT_URI,
+                            MovieContract.MovieEntry._ID + " = " + movie.getId(),
+                            null);
+            getContext().getContentResolver()
+                    .delete(MovieContract.TrailerEntry.TRAILER_CONTENT_URI,
+                            MovieContract.ReviewEntry.MOVIE_ID + " = " + movie.getId(),
+                            null);
+            getContext().getContentResolver()
+                    .delete(MovieContract.ReviewEntry.REVIEW_CONTENT_URI,
+                            MovieContract.ReviewEntry.MOVIE_ID + " = " + movie.getId(),
+                            null);
             return null;
         }
     }

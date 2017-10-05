@@ -4,8 +4,6 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.mes.udacity.popularmovies.app.popularmovies.utils.Constants;
-
 /**
  * Created by Mohamed Elsayed on 11/18/2016.
  */
@@ -22,29 +20,29 @@ public class MovieDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String SQL_CREATE_MOVIE_TABLE = "CREATE TABLE " +
-                MovieContract.MovieEntery.MOVIES_TABLE + " (" +
-                MovieContract.MovieEntery._ID+ " INTEGER PRIMARY KEY," +
-                MovieContract.MovieEntery.MOVIE_TITLE + " TEXT NOT NULL, " +
-                MovieContract.MovieEntery.MOVIE_POSTER_PATH + " TEXT NOT NULL, " +
-                MovieContract.MovieEntery.MOVIE_OVER_VIEW + " TEXT NOT NULL, " +
-                MovieContract.MovieEntery.MOVIE_RELEASE_DATE + " TEXT NOT NULL, " +
-                MovieContract.MovieEntery.MOVIE_VOTE_AVERAGE + " TEXT NOT NULL " +
+                MovieContract.MovieEntry.MOVIES_TABLE + " (" +
+                MovieContract.MovieEntry._ID+ " INTEGER PRIMARY KEY," +
+                MovieContract.MovieEntry.MOVIE_TITLE + " TEXT NOT NULL, " +
+                MovieContract.MovieEntry.MOVIE_POSTER_PATH + " TEXT NOT NULL, " +
+                MovieContract.MovieEntry.MOVIE_OVER_VIEW + " TEXT NOT NULL, " +
+                MovieContract.MovieEntry.MOVIE_RELEASE_DATE + " TEXT NOT NULL, " +
+                MovieContract.MovieEntry.MOVIE_VOTE_AVERAGE + " TEXT NOT NULL " +
                 " );";
         final String SQL_CREATE_TRAILERS_TABLE = "CREATE TABLE " +
-                MovieContract.TrailerEntery.TRAILERS_TABLE + " (" +
-                MovieContract.TrailerEntery._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                MovieContract.TrailerEntery.MOVIE_ID + " INTEGER NOT NULL, " +
-                MovieContract.TrailerEntery.TRAILER_KEY + " TEXT NOT NULL, " +
-                MovieContract.TrailerEntery.TRAILER_NAME + " TEXT NOT NULL " +
+                MovieContract.TrailerEntry.TRAILERS_TABLE + " (" +
+                MovieContract.TrailerEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                MovieContract.TrailerEntry.MOVIE_ID + " INTEGER NOT NULL, " +
+                MovieContract.TrailerEntry.TRAILER_KEY + " TEXT NOT NULL, " +
+                MovieContract.TrailerEntry.TRAILER_NAME + " TEXT NOT NULL " +
 
                 " );";
 
         final String SQL_CREATE_REVIEWS_TABLE = "CREATE TABLE " +
-                MovieContract.ReviewEntery.REVIEWS_TABLE + " (" +
-                MovieContract.ReviewEntery._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                MovieContract.ReviewEntery.MOVIE_ID + " INTEGER NOT NULL, " +
-                MovieContract.ReviewEntery.REVIEWS_AUTHOR + " TEXT NOT NULL, " +
-                MovieContract.ReviewEntery.REVIEWS_CONTENT + " TEXT NOT NULL " +
+                MovieContract.ReviewEntry.REVIEWS_TABLE + " (" +
+                MovieContract.ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                MovieContract.ReviewEntry.MOVIE_ID + " INTEGER NOT NULL, " +
+                MovieContract.ReviewEntry.REVIEWS_AUTHOR + " TEXT NOT NULL, " +
+                MovieContract.ReviewEntry.REVIEWS_CONTENT + " TEXT NOT NULL " +
                 " );";
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);
@@ -54,9 +52,9 @@ public class MovieDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.MovieEntery.MOVIES_TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.TrailerEntery.TRAILERS_TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.ReviewEntery.REVIEWS_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.MovieEntry.MOVIES_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.TrailerEntry.TRAILERS_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MovieContract.ReviewEntry.REVIEWS_TABLE);
         onCreate(db);
     }
 }

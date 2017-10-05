@@ -15,8 +15,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -92,7 +90,7 @@ public class PostersFragment extends Fragment implements PostersListListener, Po
     private int getDatabaseCount() {
         MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
         SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-        Cursor cursor = db.query(MovieContract.MovieEntery.MOVIES_TABLE,
+        Cursor cursor = db.query(MovieContract.MovieEntry.MOVIES_TABLE,
                 null, null, null, null, null, null);
         int i= cursor.getCount();
         return i;
@@ -138,17 +136,6 @@ public class PostersFragment extends Fragment implements PostersListListener, Po
         String movieStr = gson.toJson(movie);
         ((Callback)getActivity()).onItemSelected(movieStr);
     }
-//    private void initPosterAction() {
-//        recyclerView.setOnClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Movie movie = (Movie) posterGridRecyclerAdapter.getItem(position);
-//                Gson gson = new Gson();
-//                String movieStr = gson.toJson(movie);
-//                ((Callback)getActivity()).onItemSelected(movieStr);
-//            }
-//        });
-//    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -297,27 +284,27 @@ public class PostersFragment extends Fragment implements PostersListListener, Po
         @Override
         protected List<Movie> doInBackground(Void... params) {
             List<Movie> movies = new ArrayList<>();
-            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-            Cursor cursor = db.query(MovieContract.MovieEntery.MOVIES_TABLE,
-                    null, null, null, null, null, null);
+//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
+//            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
+            Cursor cursor = getContext().getContentResolver()
+                    .query(MovieContract.MovieEntry.MOVIE_CONTENT_URI,
+                            null, null, null, null);
             while (cursor.moveToNext()){
                 Movie movie = new Movie();
                 movie.setId(Long.parseLong(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery._ID))));
+                        cursor.getColumnIndex(MovieContract.MovieEntry._ID))));
                 movie.setTitle(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_TITLE)));
+                        cursor.getColumnIndex(MovieContract.MovieEntry.MOVIE_TITLE)));
                 movie.setPosterPath(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_POSTER_PATH)));
+                        cursor.getColumnIndex(MovieContract.MovieEntry.MOVIE_POSTER_PATH)));
                 movie.setReleaseDate(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_RELEASE_DATE)));
+                        cursor.getColumnIndex(MovieContract.MovieEntry.MOVIE_RELEASE_DATE)));
                 movie.setVoteAverage(Double.parseDouble(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_VOTE_AVERAGE))));
+                        cursor.getColumnIndex(MovieContract.MovieEntry.MOVIE_VOTE_AVERAGE))));
                 movie.setOverView(cursor.getString(
-                        cursor.getColumnIndex(MovieContract.MovieEntery.MOVIE_OVER_VIEW)));
+                        cursor.getColumnIndex(MovieContract.MovieEntry.MOVIE_OVER_VIEW)));
                 movies.add(movie);
             }
-            db.close();
             return movies;
         }
 
