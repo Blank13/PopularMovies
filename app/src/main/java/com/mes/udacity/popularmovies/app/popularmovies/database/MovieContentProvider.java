@@ -81,6 +81,7 @@ public class MovieContentProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
         cursor.setNotificationUri(getContext().getContentResolver(),uri);
+        db.close();
         return cursor;
     }
 
@@ -131,6 +132,7 @@ public class MovieContentProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
         getContext().getContentResolver().notifyChange(uri, null);
+        db.close();
         return returnedUri;
     }
 
@@ -159,6 +161,7 @@ public class MovieContentProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
+        db.close();
         return count;
     }
 

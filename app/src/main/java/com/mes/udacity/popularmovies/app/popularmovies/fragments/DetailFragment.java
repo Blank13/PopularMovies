@@ -81,7 +81,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
         View view = inflater.inflate(R.layout.detail_fragment,container,false);
         Intent intent = getActivity().getIntent();
         String movieJson;
-//        contentResolver = getContext().get
         Gson gson = new Gson();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
             movieJson = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -297,11 +296,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected List<Review> doInBackground(String... params) {
-//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-//            SQLiteDatabase db = movieDBHelper.getReadableDatabase();
-//            final String search = "SELECT * FROM "+
-//                    MovieContract.ReviewEntry.REVIEWS_TABLE + " WHERE " +
-//                    MovieContract.ReviewEntry.MOVIE_ID  + " = " + movie.getId();
             Cursor cursor = getContext().getContentResolver()
                     .query(MovieContract.ReviewEntry.REVIEW_CONTENT_URI,
                             null,
@@ -323,7 +317,7 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
             }
             cursor.close();
             HttpURLConnection urlConnection = null;
-            ReviewsResponse reviewsRsponse = null;
+            ReviewsResponse reviewsResponse;
 
             final String APPID_PARAM = "api_key";
             final String TYPE_PARAM = "reviews";
@@ -339,9 +333,9 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
                 Gson gson = new Gson();
-                reviewsRsponse = gson.fromJson(
+                reviewsResponse = gson.fromJson(
                         getBodyString(urlConnection.getInputStream()),ReviewsResponse.class);
-                return reviewsRsponse.getReviews();
+                return reviewsResponse.getReviews();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -386,8 +380,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected Void doInBackground(Void... params) {
-//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-//            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(MovieContract.MovieEntry._ID, movie.getId());
             values.put(MovieContract.MovieEntry.MOVIE_TITLE, movie.getTitle());
@@ -395,7 +387,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
             values.put(MovieContract.MovieEntry.MOVIE_RELEASE_DATE, movie.getReleaseDate());
             values.put(MovieContract.MovieEntry.MOVIE_VOTE_AVERAGE, movie.getVoteAverage());
             values.put(MovieContract.MovieEntry.MOVIE_OVER_VIEW, movie.getOverView());
-//            db.insert(MovieContract.MovieEntry.MOVIES_TABLE, null, values);
             getContext().getContentResolver()
                     .insert(MovieContract.MovieEntry.MOVIE_CONTENT_URI, values);
             for(int i = 0; i < trailersListAdapter.getCount(); i++){
@@ -417,7 +408,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
                 getContext().getContentResolver()
                         .insert(MovieContract.ReviewEntry.REVIEW_CONTENT_URI, values);
             }
-//            db.close();
             return null;
         }
     }
@@ -426,15 +416,6 @@ public class DetailFragment extends Fragment implements ReviewsListListener, Tra
 
         @Override
         protected Void doInBackground(Void... params) {
-//            MovieDBHelper movieDBHelper = new MovieDBHelper(getContext());
-//            SQLiteDatabase db = movieDBHelper.getWritableDatabase();
-//            db.delete(MovieContract.MovieEntry.MOVIES_TABLE,
-//                    MovieContract.MovieEntry._ID + "=" + movie.getId(), null);
-//            while (db.delete(MovieContract.TrailerEntry.TRAILERS_TABLE,
-//                    MovieContract.TrailerEntry.MOVIE_ID + "=" + movie.getId(), null) > 0);
-//            while (db.delete(MovieContract.ReviewEntry.REVIEWS_TABLE,
-//                    MovieContract.ReviewEntry.MOVIE_ID + "=" + movie.getId(), null) > 0);
-//            db.close();
             getContext().getContentResolver()
                     .delete(MovieContract.MovieEntry.MOVIE_CONTENT_URI,
                             MovieContract.MovieEntry._ID + " = " + movie.getId(),
